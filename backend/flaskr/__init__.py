@@ -3,7 +3,6 @@ from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
-
 from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
@@ -12,14 +11,16 @@ def create_app(test_config=None):
   # create and configure the app
   app = Flask(__name__)
   setup_db(app)
-  
-  '''
-  @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
-  '''
+  CORS(app, resources={'/': {'origins': '*'}})
 
-  '''
-  @TODO: Use the after_request decorator to set Access-Control-Allow
-  '''
+  @app.after_request
+  def after_request(response):
+        # Sets access control
+
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
+        
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
 
   '''
   @TODO: 
@@ -27,6 +28,27 @@ def create_app(test_config=None):
   for all available categories.
   '''
 
+  @app.route('/categories')
+  def get_categories():
+        '''
+        Handles GET requests for getting all categories.
+        '''
+
+        # get all categories and add to dict
+        categories = Category.query.all()
+        categories_dict = {}
+        for category in categories:
+            categories_dict[category.id] = category.type
+
+        # abort 404 if no categories found
+        if (len(categories_dict) == 0):
+            abort(404)
+
+        # return data to view
+        return jsonify({
+            'success': True,
+            'categories': categories_dict
+        })
 
   '''
   @TODO: 
